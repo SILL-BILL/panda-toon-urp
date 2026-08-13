@@ -33,6 +33,8 @@ Shader の表示名は `Panda/URP/Panda Toon` です。
 
 陰影判定には `NdotL` と Main Light のリアルタイム Shadow Attenuation を使用します。
 ライト色は白との中間色として反映し、強く着色したライトでも Base Color が完全に黒く潰れにくい調整です。
+Main Light が存在しない、または色・強度がゼロの場合は全面を Shadow 側として扱います。
+Emission は Main Light の有無に関係なく、Toon 陰影の決定後に独立して加算されます。
 
 ## 現時点で未対応
 

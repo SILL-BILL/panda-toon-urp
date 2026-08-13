@@ -101,6 +101,11 @@ Shader "Panda/URP/Panda Toon"
 
                 float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
                 Light mainLight = GetMainLight(shadowCoord);
+                // URP 17.5 initializes the main-light color to black when no
+                // main light is visible. No separate presence flag is exposed to HLSL.
+                half mainLightPresent = step(
+                    0.0001h,
+                    max(max(mainLight.color.r, mainLight.color.g), mainLight.color.b));
                 half3 normalWS = normalize(input.normalWS);
                 half nDotL = saturate(dot(normalWS, mainLight.direction));
 
@@ -117,10 +122,12 @@ Shader "Panda/URP/Panda Toon"
 
                 // A half-strength tint preserves readability under highly saturated lights.
                 half3 safeLightTint = lerp(half3(1.0h, 1.0h, 1.0h), mainLight.color, 0.5h);
+                half3 litToonColor = toonColor * safeLightTint;
+                half3 finalToonColor = lerp(shadowedBase, litToonColor, mainLightPresent);
                 half3 emission = SAMPLE_TEXTURE2D(_EmissionMap, sampler_EmissionMap, input.uv).rgb
                     * _EmissionColor.rgb;
 
-                return half4(toonColor * safeLightTint + emission, baseSample.a * _BaseColor.a);
+                return half4(finalToonColor + emission, baseSample.a * _BaseColor.a);
             }
             ENDHLSL
         }
