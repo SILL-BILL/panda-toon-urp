@@ -7,7 +7,7 @@ Unity 6.5 / Universal Render Pipeline (URP) 向けの、キャラクター用2�
 
 - Unity 6000.5.8f1（Unity 6.5）
 - Universal Render Pipeline 17.5.0
-- Forward Rendering
+- Forward / Forward+ Rendering
 
 Shader の表示名は `Panda/URP/Panda Toon` です。
 
@@ -36,6 +36,27 @@ Shader の表示名は `Panda/URP/Panda Toon` です。
 Main Light が存在しない、または色・強度がゼロの場合は全面を Shadow 側として扱います。
 Emission は Main Light の有無に関係なく、Toon 陰影の決定後に独立して加算されます。
 
+## Additional Lights
+
+- Point Light: 対応
+- Spot Light: 対応
+- Point / Spot Light のリアルタイムShadow: 対応
+- Forward / Forward+: 対応
+
+各Additional Lightは、面の向き（`NdotL`）だけをMain Lightと同じThreshold / Boundaryで
+Toon化します。URPが計算した距離／Spot角度減衰とリアルタイムShadowは、ライトがその地点へ
+届く強さとしてToon境界とは分離し、Toon化後の明部マスクへ乗算します。これによりThresholdは
+ライトとの距離やSpotコーン端の減衰に左右されず、純粋に面の向きを制御します。
+
+複数ライトはRGBを単純加算しません。各ライトが作る明部の被覆率を0～1の範囲で飽和合成し、
+有効なライト色の加重平均へブレンドします。これにより、Main Toonの暗部をAdditional Lightで
+暗くすることなく明部方向へ変化させつつ、ライト数に比例した極端な白飛びを抑えます。Main Lightがない場合も、
+`Base Color × Shadow Color`を基本としてPoint / Spot Lightが当たる部分だけ明るくなります。
+
+現時点ではAdditional Light Cookie、Light Layers、Additional Directional Light専用の表現は
+明示的にサポートしていません。ForwardではURP AssetのPer Object Limit、Forward+では
+カメラごとの可視ライト上限の影響を受けます。
+
 ## 現時点で未対応
 
 - Outline
@@ -43,7 +64,6 @@ Emission は Main Light の有無に関係なく、Toon 陰影の決定後に独
 - Specular / Hair Specular
 - Normal Map
 - MatCap
-- Additional Lights
 - SSAO 専用処理
 - 3段以上の影
 - Alpha Clip / Transparent
